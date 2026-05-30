@@ -18,9 +18,11 @@ function getLocation(): Promise<{ lat: number; lng: number } | null> {
 export default function VapiButton() {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [showHint, setShowHint] = useState(true);
   const vapiRef = useRef<Vapi | null>(null);
 
   async function handleClick() {
+    setShowHint(false);
     if (status === "active" || status === "connecting") {
       vapiRef.current?.stop();
       return;
@@ -52,6 +54,7 @@ export default function VapiButton() {
         vapiRef.current = null;
       });
       vapi.on("error", (e) => {
+        if (e?.message?.includes("unsupported input processor")) return;
         setErrorMsg(e?.message || "Call failed");
         setStatus("error");
         setTimeout(() => setStatus("idle"), 3000);
@@ -71,7 +74,10 @@ export default function VapiButton() {
   }
 
   return (
-    <div style={{ position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", textAlign: "center", zIndex: 10000 }}>
+    <div style={{ position: "fixed", top: 20, right: 20, display: "flex", alignItems: "center", zIndex: 10000 }}>
+      {showHint && status === "idle" && (
+        <p style={{ marginRight: 12, fontSize: 18, color: "#ccc", whiteSpace: "nowrap" }}>Click here to get started →</p>
+      )}
       <button
         onClick={handleClick}
         aria-label={status === "active" || status === "connecting" ? "Stop call" : "Start call"}
@@ -91,7 +97,7 @@ export default function VapiButton() {
       >
         {status === "connecting" ? "⏳" : status === "active" ? "⏹" : "▶"}
       </button>
-      {status === "active" && <p style={{ marginTop: 8, fontSize: 14, color: "#666" }}>Listening...</p>}
+
       {status === "error" && <p style={{ marginTop: 8, fontSize: 14, color: "#ef4444" }}>{errorMsg}</p>}
     </div>
   );
