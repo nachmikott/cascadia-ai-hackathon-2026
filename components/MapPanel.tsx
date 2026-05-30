@@ -23,6 +23,7 @@ export interface MarkerData {
 
 export interface RouteData {
   waypoints: { lat: number; lng: number; title: string }[];
+  geometry?: [number, number][];
 }
 
 function LocateUser() {
@@ -73,8 +74,8 @@ export default function MapPanel({ markers, route }: { markers: MarkerData[]; ro
       ))}
       {route && (
         <Polyline
-          positions={route.waypoints.map((w) => [w.lat, w.lng] as [number, number])}
-          pathOptions={{ color: "#2563eb", weight: 4, dashArray: "10 6" }}
+          positions={route.geometry || route.waypoints.map((w) => [w.lat, w.lng] as [number, number])}
+          pathOptions={{ color: "#2563eb", weight: 4 }}
         />
       )}
     </MapContainer>

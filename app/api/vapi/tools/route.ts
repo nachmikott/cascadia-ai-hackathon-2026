@@ -3,6 +3,7 @@ import { eventBus } from "@/lib/events";
 import { pins, addPins, clearPins, getUserLocation, getLastRoute, setLastRoute } from "@/lib/state";
 import { generateRoutePDF } from "@/lib/pdf";
 import { uploadToBox, uploadTextToBox } from "@/lib/box";
+import { getRouteGeometry } from "@/lib/routing";
 
 function dist(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
   return Math.sqrt((a.lat - b.lat) ** 2 + (a.lng - b.lng) ** 2);
@@ -75,8 +76,9 @@ export async function POST(request: Request) {
           return { toolCallId: toolCall.id, result: `Only one category on the map (${allCategories[0]}). Search for another type of place to build a route.` };
         }
 
-        eventBus.emit("route-update", { waypoints });
         setLastRoute(waypoints);
+        const geometry = await getRouteGeometry(waypoints);
+        eventBus.emit("route-update", { waypoints, geometry });
         const stops = waypoints.map((w) => `${w.title} (${w.category})`).join(" → ");
         return { toolCallId: toolCall.id, result: `FASTEST route plotted on the map with ${waypoints.length} stops: ${stops}. This is the shortest-distance path hitting one of each place type.` };
       }

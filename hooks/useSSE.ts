@@ -16,7 +16,10 @@ export function useSSE() {
     });
 
     es.addEventListener("route-update", (e) => {
-      setRoute(JSON.parse(e.data));
+      const data: RouteData = JSON.parse(e.data);
+      setRoute(data);
+      const routeTitles = new Set(data.waypoints.map((w) => w.title));
+      setMarkers((prev) => prev.filter((m) => routeTitles.has(m.title)));
     });
 
     es.addEventListener("map-clear", () => {
