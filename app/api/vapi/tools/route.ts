@@ -2,7 +2,7 @@ import { searchNearby } from "@/lib/apify";
 import { eventBus } from "@/lib/events";
 import { pins, addPins, clearPins, getUserLocation, getLastRoute, setLastRoute } from "@/lib/state";
 import { generateRoutePDF } from "@/lib/pdf";
-import { uploadToBox } from "@/lib/box";
+import { uploadToBox, uploadTextToBox } from "@/lib/box";
 
 function dist(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
   return Math.sqrt((a.lat - b.lat) ** 2 + (a.lng - b.lng) ** 2);
@@ -107,8 +107,16 @@ export async function POST(request: Request) {
 
         try {
           const pdfBuffer = await generateRoutePDF(route, pins);
-          const filename = `route-plan-${Date.now()}.pdf`;
-          const result = await uploadToBox(pdfBuffer, filename);
+          const ts = Date.now();
+          const result = await uploadToBox(pdfBuffer, `route-plan-${ts}.pdf`);
+
+          // Upload companion text file for the webhook to read
+          const routeText = route.map((wp, i) => {
+            const pin = pins.find((p) => p.title === wp.title);
+            return `Stop ${i + 1}: ${wp.title}, category ${wp.category}${pin?.address ? `, address ${pin.address}` : ""}`;
+          }).join(". ");
+          await uploadTextToBox(routeText, `route-plan-${ts}.txt`);
+
           return { toolCallId: toolCall.id, result: result.message };
         } catch (e) {
           console.error("[shareToBox] error:", e);

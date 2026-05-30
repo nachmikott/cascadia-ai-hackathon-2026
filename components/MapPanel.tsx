@@ -36,14 +36,19 @@ function LocateUser() {
   return null;
 }
 
-function FitBounds({ markers }: { markers: MarkerData[] }) {
+function FitBounds({ markers, route }: { markers: MarkerData[]; route: RouteData | null }) {
   const map = useMap();
   useEffect(() => {
-    if (markers.length > 0) {
-      const bounds = L.latLngBounds(markers.map((m) => [m.lat, m.lng]));
-      map.fitBounds(bounds, { padding: [50, 50] });
+    const points: [number, number][] = [];
+    if (route && route.waypoints.length > 0) {
+      route.waypoints.forEach((w) => points.push([w.lat, w.lng]));
+    } else if (markers.length > 0) {
+      markers.forEach((m) => points.push([m.lat, m.lng]));
     }
-  }, [markers, map]);
+    if (points.length > 0) {
+      map.fitBounds(L.latLngBounds(points), { padding: [50, 50] });
+    }
+  }, [markers, route, map]);
   return null;
 }
 
@@ -54,7 +59,7 @@ export default function MapPanel({ markers, route }: { markers: MarkerData[]; ro
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <FitBounds markers={markers} />
+      <FitBounds markers={markers} route={route} />
       <LocateUser />
       {markers.map((m, i) => (
         <Marker key={i} position={[m.lat, m.lng]}>
