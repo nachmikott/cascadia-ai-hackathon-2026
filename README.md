@@ -1,4 +1,4 @@
-# Cascadia AI Hackathon 2026
+# Friendly Neighbor
 
 Voice-powered interactive evacuation planning support. 
 * A VAPI voice assistant lets users search for nearby places (campsites, gas stations, grocery stores)
