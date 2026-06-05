@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cascadia AI Hackathon 2026
 
-## Getting Started
+Voice-powered interactive evacuation planning support. 
+* A VAPI voice assistant lets users search for nearby places (campsites, gas stations, grocery stores)
+* Determine an optimized evacuation route
+* Inform a neighbor of the plan, create shareable PDFs of the plan and trigger an automated outbound phone call to tell them the plan.
 
-First, run the development server:
+## How It Works
+
+1. User opens the app and clicks the mic button to start a VAPI voice session
+2. The assistant helps search nearby places and plot an evacuation route on the map
+3. When the user asks to share the route, a PDF and companion text file are uploaded to Box
+4. Box fires a webhook to the server, which triggers a VAPI outbound phone call to a neighbor
+5. The neighbor receives a call with the evacuation plan read aloud by an AI voice
+
+## Running the App
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env.local` file:
 
-## Learn More
+```
+VAPI_PRIVATE_KEY=
+VAPI_ORG_ID=
+VAPI_ASSISTANT_ID=
+VAPI_PHONE_NUMBER_ID=
+NEIGHBOR_PHONE_NUMBER=
+BOX_DEVELOPER_TOKEN=
+BOX_FOLDER_ID=
+APIFY_API_TOKEN=
+```
 
-To learn more about Next.js, take a look at the following resources:
+## VAPI Setup
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+https://vapi.ai/
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+See `VAPI_CONFIG.md` for the full assistant configuration, including the system prompt and all tool definitions (`searchNearby`, `suggestRoute`, `getMapStatus`, `clearMap`, `shareToBox`).
 
-## Deploy on Vercel
+The VAPI assistant's tools point to `/api/vapi/tools` on your server — this must be a publicly accessible HTTPS URL (see **Local Development** below).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Box Setup
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+https://box.com/
+
+See `BOX_WEBHOOK_CONFIG.md` for step-by-step instructions on:
+- Creating a Box app and generating a developer token
+- Finding your folder ID
+- Registering the `FILE.UPLOADED` webhook pointing to `/api/box/webhook`
+
+## Local Development with ngrok
+
+Box webhooks and VAPI tool calls both require a publicly accessible HTTPS URL. Use [ngrok](https://ngrok.com) to tunnel your local server:
+
+```bash
+ngrok http 3000
+```
+
+Use the `https://xxxx.ngrok.io` URL as:
+- The `address` when registering your Box webhook (see `BOX_WEBHOOK_CONFIG.md`)
+- The `server.url` in each tool definition in your VAPI assistant config (see `VAPI_CONFIG.md`)

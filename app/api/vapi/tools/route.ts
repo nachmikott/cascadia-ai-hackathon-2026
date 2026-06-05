@@ -76,6 +76,11 @@ export async function POST(request: Request) {
           return { toolCallId: toolCall.id, result: `Only one category on the map (${allCategories[0]}). Search for another type of place to build a route.` };
         }
 
+        const routeCategories = new Set(waypoints.map((w) => w.category.toLowerCase()));
+        if (waypoints.length !== allCategories.length || routeCategories.size !== allCategories.length) {
+          return { toolCallId: toolCall.id, result: "Route generation failed: could not select exactly one location per category. Please try again." };
+        }
+
         setLastRoute(waypoints);
         const geometry = await getRouteGeometry(waypoints);
         eventBus.emit("route-update", { waypoints, geometry });

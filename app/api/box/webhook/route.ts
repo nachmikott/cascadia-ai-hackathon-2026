@@ -3,6 +3,7 @@ import { triggerEvacuationCall } from "@/lib/vapi-call";
 
 export async function POST(request: Request) {
   const body = await request.json();
+  console.log("[box-webhook] Received:", JSON.stringify(body));
   const trigger = body.trigger;
   const fileId = body.source?.id;
   const fileName: string = body.source?.name || "";
